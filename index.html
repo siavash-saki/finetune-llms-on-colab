@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open-Source LLMs — Hands-On Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a26;
+            --border: #1e1e2e;
+            --text: #e0e0e8;
+            --text-muted: #8888a0;
+            --accent-1: #7c5cfc;
+            --accent-2: #00d4aa;
+            --accent-3: #ff6b9d;
+            --accent-gradient: linear-gradient(135deg, #7c5cfc, #00d4aa);
+            --section-1: #7c5cfc;
+            --section-2: #00b4d8;
+            --section-3: #ff6b9d;
+            --glow-1: rgba(124, 92, 252, 0.15);
+            --glow-2: rgba(0, 212, 170, 0.15);
+            --glow-3: rgba(255, 107, 157, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ---- HERO ---- */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 40px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: rgba(124, 92, 252, 0.1);
+            border: 1px solid rgba(124, 92, 252, 0.3);
+            color: var(--accent-1);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 560px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        /* ---- PROGRESS RING ---- */
+        .progress-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .progress-ring-wrap {
+            position: relative;
+            width: 72px;
+            height: 72px;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 5;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: url(#progressGradient);
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 188.5;
+            stroke-dashoffset: 188.5;
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .progress-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .progress-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .progress-count {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* ---- SECTIONS ---- */
+        .sections {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px 100px;
+        }
+
+        .section-group {
+            position: relative;
+            margin-bottom: 48px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-left: 4px;
+        }
+
+        .section-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .section-1 .section-number { background: var(--glow-1); color: var(--section-1); }
+        .section-2 .section-number { background: var(--glow-2); color: var(--section-2); }
+        .section-3 .section-number { background: var(--glow-3); color: var(--section-3); }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .section-1 .section-title { color: var(--section-1); }
+        .section-2 .section-title { color: var(--section-2); }
+        .section-3 .section-title { color: var(--section-3); }
+
+        .section-bar {
+            height: 3px;
+            flex: 1;
+            border-radius: 2px;
+            opacity: 0.3;
+        }
+
+        .section-1 .section-bar { background: var(--section-1); }
+        .section-2 .section-bar { background: var(--section-2); }
+        .section-3 .section-bar { background: var(--section-3); }
+
+        /* ---- NOTEBOOK CARDS ---- */
+        .notebook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            transition: all 0.25s ease;
+            overflow: hidden;
+        }
+
+        .notebook-card:hover {
+            background: var(--bg-card-hover);
+            border-color: #2a2a3e;
+            transform: translateY(-1px);
+        }
+
+        .notebook-card.completed {
+            border-color: rgba(0, 212, 170, 0.25);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            gap: 14px;
+            user-select: none;
+        }
+
+        .card-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            border: 2px solid #2e2e42;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card-checkbox:hover {
+            border-color: var(--accent-2);
+        }
+
+        .card-checkbox.checked {
+            background: var(--accent-2);
+            border-color: var(--accent-2);
+            animation: checkPop 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+
+        .card-checkbox.checked svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card-checkbox svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.25s ease;
+        }
+
+        .card-number {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            min-width: 18px;
+        }
+
+        .card-title-wrap {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .card-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.04);
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .card-expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .notebook-card.expanded .card-expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* ---- CARD BODY ---- */
+        .card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .notebook-card.expanded .card-body {
+            max-height: 600px;
+        }
+
+        .card-content {
+            padding: 0 20px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 0;
+            padding-top: 16px;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .skills-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .skill-tag {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(124, 92, 252, 0.08);
+            color: var(--accent-1);
+            border: 1px solid rgba(124, 92, 252, 0.15);
+        }
+
+        .section-2 .skill-tag {
+            background: rgba(0, 180, 216, 0.08);
+            color: var(--section-2);
+            border-color: rgba(0, 180, 216, 0.15);
+        }
+
+        .section-3 .skill-tag {
+            background: rgba(255, 107, 157, 0.08);
+            color: var(--section-3);
+            border-color: rgba(255, 107, 157, 0.15);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ---- CONFETTI ---- */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confettiFall 2.5s ease-in forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(720deg) scale(0.5);
+            }
+        }
+
+        /* ---- SECTION COMPLETE BANNER ---- */
+        .section-complete {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-top: 8px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            animation: slideIn 0.4s ease;
+        }
+
+        .section-complete.visible {
+            display: flex;
+        }
+
+        .section-1 .section-complete { background: var(--glow-1); color: var(--section-1); }
+        .section-2 .section-complete { background: var(--glow-2); color: var(--section-2); }
+        .section-3 .section-complete { background: var(--glow-3); color: var(--section-3); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- FOOTER ---- */
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent-1);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 600px) {
+            .hero {
+                padding: 60px 16px 30px;
+            }
+            .card-header {
+                padding: 14px 16px;
+            }
+            .card-content {
+                padding: 0 16px 16px;
+            }
+            .card-time {
+                display: none;
+            }
+            .progress-container {
+                padding: 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-badge">Free Tutorial Series</div>
+    <h1>Open-Source LLMs</h1>
+    <p>A hands-on journey from zero to fine-tuning your own models — 8 notebooks, all running free on Google Colab.</p>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-section">
+    <div class="progress-container">
+        <div class="progress-ring-wrap">
+            <svg class="progress-ring" width="72" height="72">
+                <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#7c5cfc" />
+                        <stop offset="100%" style="stop-color:#00d4aa" />
+                    </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="36" cy="36" r="30" />
+                <circle class="progress-ring-fill" cx="36" cy="36" r="30" />
+            </svg>
+            <div class="progress-text" id="progressPercent">0%</div>
+        </div>
+        <div class="progress-info">
+            <div class="progress-label">Your Progress</div>
+            <div class="progress-count"><span id="completedCount">0</span> / 8 notebooks</div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTIONS -->
+<div class="sections">
+
+    <!-- SECTION 1: FUNDAMENTALS -->
+    <div class="section-group section-1" data-section="1">
+        <div class="section-header">
+            <div class="section-number">I</div>
+            <div class="section-title">Fundamentals</div>
+            <div class="section-bar"></div>
+        </div>
+
+        <div class="notebook-card" data-nb="1">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">01</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Introduction to Hugging Face</div>
+                    <div class="card-subtitle">Quick tour of the ecosystem</div>
+                </div>
+                <div class="card-time">~30 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Get a feel for what's possible with open-source models. Generate images with diffusion models and speech with text-to-audio — all in a few lines of code.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Hugging Face Hub</span>
+                        <span class="skill-tag">Diffusers</span>
+                        <span class="skill-tag">SDXL-Turbo</span>
+                        <span class="skill-tag">SDXL Base + Refiner</span>
+                        <span class="skill-tag">SpeechT5</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/drive/1NtblhJ40EXTpOS9pxJjGVXPV_b3yiV4d?usp=sharing" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notebook-card" data-nb="2">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(2)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">02</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Hugging Face Pipelines</div>
+                    <div class="card-subtitle">The easy way to run inference</div>
+                </div>
+                <div class="card-time">~45 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Use the high-level pipeline API to run 8+ different tasks with minimal code: sentiment analysis, text generation, NER, table QA, audio, music, and image generation.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Pipeline API</span>
+                        <span class="skill-tag">Text Classification</span>
+                        <span class="skill-tag">Text Generation</span>
+                        <span class="skill-tag">NER</span>
+                        <span class="skill-tag">Table QA</span>
+                        <span class="skill-tag">Bark</span>
+                        <span class="skill-tag">MusicGen</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/drive/1gtrLYDtjbL2BKN3CLa9K-XND3Qf26Lz6?usp=sharing" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notebook-card" data-nb="3">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(3)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">03</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Hugging Face Tokenizers</div>
+                    <div class="card-subtitle">What happens under the hood</div>
+                </div>
+                <div class="card-time">~30 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Understand how text becomes numbers. Compare tokenizers across Llama, DeepSeek, Phi, and Qwen. Learn about model variants and prompt formatting with <code>apply_chat_template</code>.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Tokenization</span>
+                        <span class="skill-tag">BPE</span>
+                        <span class="skill-tag">Encode / Decode</span>
+                        <span class="skill-tag">Vocabulary</span>
+                        <span class="skill-tag">Chat Templates</span>
+                        <span class="skill-tag">Model Variants</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/drive/1BnUGfnys5ZP6prMKTTzzd4SI4bktrbSz?usp=sharing" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-complete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Fundamentals complete!
+        </div>
+    </div>
+
+    <!-- SECTION 2: FULL CONTROL -->
+    <div class="section-group section-2" data-section="2">
+        <div class="section-header">
+            <div class="section-number">II</div>
+            <div class="section-title">Full Control</div>
+            <div class="section-bar"></div>
+        </div>
+
+        <div class="notebook-card" data-nb="4">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(4)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">04</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Model Inference</div>
+                    <div class="card-subtitle">Tokenizer + Model, the manual way</div>
+                </div>
+                <div class="card-time">~45 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Load models directly and control every step of generation. Experiment with temperature, top_p, and sampling. Try multiple model families and build multi-turn conversations.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Manual Inference</span>
+                        <span class="skill-tag">Temperature</span>
+                        <span class="skill-tag">top_p / top_k</span>
+                        <span class="skill-tag">Streaming</span>
+                        <span class="skill-tag">Multi-Turn Chat</span>
+                        <span class="skill-tag">Phi-4 / Llama / Qwen</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/drive/1FgD6ZLQHUhWtfL1fjGRRZHiYlxj4GHQY?usp=sharing" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notebook-card" data-nb="5">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(5)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">05</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Quantization</div>
+                    <div class="card-subtitle">Run bigger models on smaller GPUs</div>
+                </div>
+                <div class="card-time">~30 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Break the memory barrier. Load models in 8-bit and 4-bit precision, compare quality side-by-side, and run Llama 3.1 8B on a free T4 GPU that normally couldn't fit it.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">bitsandbytes</span>
+                        <span class="skill-tag">8-bit / 4-bit</span>
+                        <span class="skill-tag">NF4</span>
+                        <span class="skill-tag">BitsAndBytesConfig</span>
+                        <span class="skill-tag">GPTQ / AWQ / GGUF</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/github/YOUR_USERNAME/open-source-LLMs/blob/main/05_HuggingFace_Quantization.ipynb" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-complete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Full control unlocked!
+        </div>
+    </div>
+
+    <!-- SECTION 3: FINE-TUNING -->
+    <div class="section-group section-3" data-section="3">
+        <div class="section-header">
+            <div class="section-number">III</div>
+            <div class="section-title">Fine-Tuning</div>
+            <div class="section-bar"></div>
+        </div>
+
+        <div class="notebook-card" data-nb="6">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(6)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">06</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Fine-Tuning with LoRA & QLoRA</div>
+                    <div class="card-subtitle">Train your own model</div>
+                </div>
+                <div class="card-time">~60 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Adapt a model to your own data. Learn how LoRA trains less than 1% of parameters, prepare a dataset, run training with SFTTrainer, and compare before vs after.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">LoRA</span>
+                        <span class="skill-tag">QLoRA</span>
+                        <span class="skill-tag">SFTTrainer</span>
+                        <span class="skill-tag">PEFT</span>
+                        <span class="skill-tag">Dataset Prep</span>
+                        <span class="skill-tag">Adapters</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/github/YOUR_USERNAME/open-source-LLMs/blob/main/06_HuggingFace_FineTuning.ipynb" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notebook-card" data-nb="7">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(7)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">07</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Tracking, Evaluation & Iteration</div>
+                    <div class="card-subtitle">Do it properly</div>
+                </div>
+                <div class="card-time">~45 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Track experiments with Weights & Biases, read training curves, run hyperparameter experiments, evaluate model quality, and diagnose common training problems.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Weights & Biases</span>
+                        <span class="skill-tag">Loss Curves</span>
+                        <span class="skill-tag">Hyperparameter Tuning</span>
+                        <span class="skill-tag">Evaluation</span>
+                        <span class="skill-tag">Debugging Training</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/github/YOUR_USERNAME/open-source-LLMs/blob/main/07_HuggingFace_TrainingExperiments.ipynb" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notebook-card" data-nb="8">
+            <div class="card-header">
+                <div class="card-checkbox" onclick="event.stopPropagation(); toggleComplete(8)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="card-number">08</div>
+                <div class="card-title-wrap">
+                    <div class="card-title">Dataset Curation & Advanced Fine-Tuning</div>
+                    <div class="card-subtitle">DPO, merging, and deployment</div>
+                </div>
+                <div class="card-time">~60 min</div>
+                <div class="card-expand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-content">
+                    <p class="card-description">Build your own dataset from scratch, train with DPO preference alignment, merge LoRA adapters into the base model, and push your creation to Hugging Face Hub.</p>
+                    <div class="skills-label">You'll learn</div>
+                    <div class="skills">
+                        <span class="skill-tag">Custom Datasets</span>
+                        <span class="skill-tag">DPO</span>
+                        <span class="skill-tag">Preference Alignment</span>
+                        <span class="skill-tag">Merge Adapters</span>
+                        <span class="skill-tag">Push to Hub</span>
+                    </div>
+                    <div class="card-actions">
+                        <a class="btn btn-primary" href="https://colab.research.google.com/github/YOUR_USERNAME/open-source-LLMs/blob/main/08_HuggingFace_AdvancedFineTuning.ipynb" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open in Colab
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-complete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Fine-tuning mastered!
+        </div>
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    All notebooks run free on
+    <a href="https://colab.research.google.com" target="_blank">Google Colab</a>
+</div>
+
+<!-- CONFETTI CONTAINER -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+    // ---- STATE ----
+    const STORAGE_KEY = 'opensourcellms_progress';
+    const SECTION_MAP = { 1: [1,2,3], 2: [4,5], 3: [6,7,8] };
+    let completed = loadProgress();
+
+    // ---- PERSISTENCE ----
+    function loadProgress() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? new Set(JSON.parse(data)) : new Set();
+        } catch {
+            return new Set();
+        }
+    }
+
+    function saveProgress() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
+    }
+
+    // ---- TOGGLE COMPLETE ----
+    function toggleComplete(nb) {
+        if (completed.has(nb)) {
+            completed.delete(nb);
+        } else {
+            completed.add(nb);
+        }
+        saveProgress();
+        updateUI();
+
+        // Check section completion
+        for (const [section, nbs] of Object.entries(SECTION_MAP)) {
+            if (nbs.every(n => completed.has(n))) {
+                const banner = document.querySelector(`.section-${section} .section-complete`);
+                if (banner && !banner.classList.contains('visible')) {
+                    banner.classList.add('visible');
+                    fireConfetti();
+                }
+            }
+        }
+    }
+
+    // ---- EXPAND/COLLAPSE ----
+    document.querySelectorAll('.card-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.card-checkbox')) return;
+            const card = header.closest('.notebook-card');
+            card.classList.toggle('expanded');
+        });
+    });
+
+    // ---- UI UPDATE ----
+    function updateUI() {
+        const count = completed.size;
+        const percent = Math.round((count / 8) * 100);
+
+        document.getElementById('completedCount').textContent = count;
+        document.getElementById('progressPercent').textContent = percent + '%';
+
+        // Progress ring
+        const ring = document.querySelector('.progress-ring-fill');
+        const circumference = 2 * Math.PI * 30; // r=30
+        const offset = circumference - (count / 8) * circumference;
+        ring.style.strokeDashoffset = offset;
+
+        // Card states
+        document.querySelectorAll('.notebook-card').forEach(card => {
+            const nb = parseInt(card.dataset.nb);
+            const checkbox = card.querySelector('.card-checkbox');
+            if (completed.has(nb)) {
+                card.classList.add('completed');
+                checkbox.classList.add('checked');
+            } else {
+                card.classList.remove('completed');
+                checkbox.classList.remove('checked');
+            }
+        });
+
+        // Section banners
+        for (const [section, nbs] of Object.entries(SECTION_MAP)) {
+            const banner = document.querySelector(`.section-${section} .section-complete`);
+            if (nbs.every(n => completed.has(n))) {
+                banner.classList.add('visible');
+            } else {
+                banner.classList.remove('visible');
+            }
+        }
+    }
+
+    // ---- CONFETTI ----
+    function fireConfetti() {
+        const container = document.getElementById('confettiContainer');
+        const colors = ['#7c5cfc', '#00d4aa', '#ff6b9d', '#ffd166', '#00b4d8', '#fff'];
+        for (let i = 0; i < 60; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.top = '-10px';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.animationDelay = Math.random() * 0.5 + 's';
+            piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+            piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+            piece.style.width = (5 + Math.random() * 6) + 'px';
+            piece.style.height = (5 + Math.random() * 6) + 'px';
+            container.appendChild(piece);
+            setTimeout(() => piece.remove(), 3000);
+        }
+    }
+
+    // ---- INIT ----
+    updateUI();
+</script>
+
+</body>
+</html>
